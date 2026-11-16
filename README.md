@@ -1,56 +1,34 @@
-# Sorting Visualizer
+# Sorting-Visualizer-Web-Application
 
-An interactive web app that animates how classic sorting algorithms work. Plain HTML, CSS and JavaScript: no build step, no dependencies.
+The Sorting Visualizer project is a web application developed with HTML, CSS, and JavaScript, providing a user-friendly interface for visualizing sorting algorithms such as Bubble Sort and Selection Sort.
 
-> **Note:** This is an original implementation written to match a feature brief. It is **not** a copy of, and has not been checked against, `bitleakash6/Sorting-Visualizer-Web-Application`.
+[Live Demo](YOUR_LIVE_DEMO_LINK)
 
-## Features
-- Six algorithms with step-by-step animation
-- Colour-coded bars: unsorted, comparing, moving, in place
-- Array size slider (5-100) and 5 speed levels
-- New random array, Reset (same array again), Start
-- Live comparison and swap/write counters
-- Time and space complexity panel for the selected algorithm
-- Responsive layout (phone, tablet, desktop), light/dark theme, reduced-motion support
+## Features:
 
-## Algorithms
-Bubble, Selection, Insertion, Merge, Quick, Heap.
+1. **Visualization:** Watch sorting algorithms in action through an interactive and visually appealing interface.
+2. **Multiple Algorithms:** Choose from a selection of popular sorting algorithms such as Bubble Sort, Selection Sort, Insertion Sort, Merge Sort, Quick Sort, and more.
+3. **Customizable Speed:** Adjust the speed of the visualization to match your learning pace.
+4. **Array Size Control:** Test algorithms with arrays of different sizes to observe their performance under various conditions.
+5. **Step-by-Step Mode:** Step through each iteration of the sorting process for a more detailed understanding.
+6. **Responsive Design:** Enjoy a seamless experience across different devices and screen sizes.
 
-| Algorithm | Best | Average | Worst | Space |
-|---|---|---|---|---|
-| Bubble | O(n) | O(n²) | O(n²) | O(1) |
-| Selection | O(n²) | O(n²) | O(n²) | O(1) |
-| Insertion | O(n) | O(n²) | O(n²) | O(1) |
-| Merge | O(n log n) | O(n log n) | O(n log n) | O(n) |
-| Quick (last-element pivot) | O(n log n) | O(n log n) | O(n²) | O(log n) |
-| Heap | O(n log n) | O(n log n) | O(n log n) | O(1) |
+## Tech Stack:
 
-## Folder structure
-```
-Sorting-Visualizer/
-├── index.html
-├── css/style.css
-├── js/algorithms.js   # generators that yield animation steps
-├── js/main.js         # UI and animation loop
-├── assets/favicon.svg
-├── test.js            # algorithm tests (Node)
-├── README.md
-├── LICENSE
-└── .gitignore
-```
+1. **HTML:** Used for structuring the web page and creating the user interface elements.
+2. **CSS:** Employed for styling the user interface, providing a visually pleasing experience.
+3. **JavaScript:** Implemented to handle the logic behind sorting algorithms and the interactive visualization.
+4. **Bootstrap (optional):** Utilized for faster and easier web development, providing pre-designed components and styles.
 
-## Run locally
-Open `index.html` in any modern browser. Optional: `python -m http.server` then visit http://localhost:8000.
-Run the algorithm tests with `node test.js`.
+## Project Screenshot:
 
-## Screenshots
-Add your own screenshots to `assets/` and link them here.
+![Sorting Visualizer](screenshot.png)
 
-## Future improvements
-Pause/step controls, counting and radix sort, custom input arrays, sound.
 
-## Author
-Your Name - https://github.com/YOUR_USERNAME
+## Live Demo:
 
-## License
-MIT (see `LICENSE`). Replace the name in LICENSE with yours.
+[Sorting Visualizer Web Application](YOUR_LIVE_DEMO_LINK)
+
+## GitHub Repository:
+
+[Sorting-Visualizer-Web-Application](https://github.com/khushalraut706/Sorting-Visualizer-Web-Application)
