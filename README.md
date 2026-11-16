@@ -29,6 +29,4 @@ The Sorting Visualizer project is a web application developed with HTML, CSS, an
 
 [Sorting Visualizer Web Application](YOUR_LIVE_DEMO_LINK)
 
-## GitHub Repository:
 
-[Sorting-Visualizer-Web-Application](https://github.com/khushalraut706/Sorting-Visualizer-Web-Application)
