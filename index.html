@@ -4,8 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sorting Visualizer</title>
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/style.css">
+<style>
+:root{--paper:#f3f6f4;--ink:#1b2a2f;--muted:#5b6b70;--card:#fff;--line:#d5dedb;
+--bar:#2f6f73;--compare:#e0a100;--swap:#d9483b;--sorted:#3e9b5f;--accent:#1b2a2f}
+@media (prefers-color-scheme:dark){:root{--paper:#121a1d;--ink:#e8f0ee;--muted:#9bb0b0;--card:#1a2528;--line:#2c3b3f;
+--bar:#4a9aa0;--compare:#f0b429;--swap:#ef6a5c;--sorted:#58c07f;--accent:#6fc3b2}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif}
+.top{padding:1.5rem clamp(1rem,4vw,2.5rem) .5rem}
+h1{margin:0;font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:-.02em}
+.top p{margin:.2rem 0 0;color:var(--muted)}
+h2{font-size:.95rem;margin:1.2rem 0 .5rem}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:1.25rem;padding:1rem clamp(1rem,4vw,2.5rem) 2rem}
+.panel,.stage{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.1rem}
+.panel h2:first-child{margin-top:0}
+.algos{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);
+border-radius:8px;padding:.55rem .7rem;transition:background .15s,border-color .15s}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--compare);outline-offset:2px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.algos button[aria-checked=true]{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+button.primary{background:var(--sorted);color:#fff;border-color:var(--sorted);font-weight:600}
+label{display:block;margin:.6rem 0;font-size:.9rem}
+label output{float:right;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--bar)}
+.btns{display:grid;gap:.5rem;margin-top:1rem}
+.info{margin-top:1.2rem;border-top:1px solid var(--line);padding-top:.2rem}
+dl{display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;margin:.4rem 0}
+dt{color:var(--muted)}dd{margin:0;font-family:Consolas,monospace}
+#infoDesc{color:var(--muted);font-size:.9rem}
+.stats{display:flex;flex-wrap:wrap;gap:1.2rem;font-size:.9rem;color:var(--muted)}
+.stats b{color:var(--ink);font-variant-numeric:tabular-nums}
+#status{margin-left:auto;font-weight:600;color:var(--ink)}
+.bars{display:flex;align-items:flex-end;gap:2px;height:min(60vh,460px);margin:1rem 0;border-bottom:2px solid var(--ink)}
+.bar{flex:1;background:var(--bar);border-radius:3px 3px 0 0;transition:height .08s ease,background .08s}
+.bar.compare{background:var(--compare)}.bar.swap{background:var(--swap)}.bar.sorted{background:var(--sorted)}
+.legend{display:flex;flex-wrap:wrap;gap:1rem;list-style:none;margin:0;padding:0;font-size:.85rem}
+.legend i{display:inline-block;width:.9rem;height:.9rem;border-radius:3px;margin-right:.4rem;vertical-align:-2px}
+.k-default{background:var(--bar)}.k-compare{background:var(--compare)}.k-swap{background:var(--swap)}.k-sorted{background:var(--sorted)}
+@media (max-width:860px){.layout{grid-template-columns:1fr}.bars{height:45vh}}
+@media (prefers-reduced-motion:reduce){.bar{transition:none}}
+
+</style>
 </head>
 <body>
 <header class="top">
@@ -52,7 +93,183 @@
     </ul>
   </section>
 </main>
-<script src="js/algorithms.js"></script>
-<script src="js/main.js"></script>
+<script>
+/* Each algorithm is a generator that sorts array `a` in place and yields
+   step events: {t:'cmp',i,j} | {t:'swap',i,j} | {t:'set',i,v} | {t:'done',i} */
+(function (root) {
+  function* bubble(a) {
+    for (let n = a.length; n > 1; n--) {
+      let swapped = false;
+      for (let i = 0; i < n - 1; i++) {
+        yield { t: 'cmp', i, j: i + 1 };
+        if (a[i] > a[i + 1]) { [a[i], a[i + 1]] = [a[i + 1], a[i]]; swapped = true; yield { t: 'swap', i, j: i + 1 }; }
+      }
+      yield { t: 'done', i: n - 1 };
+      if (!swapped) { for (let k = 0; k < n - 1; k++) yield { t: 'done', i: k }; return; }
+    }
+    if (a.length) yield { t: 'done', i: 0 };
+  }
+  function* selection(a) {
+    for (let i = 0; i < a.length; i++) {
+      let m = i;
+      for (let j = i + 1; j < a.length; j++) { yield { t: 'cmp', i: m, j }; if (a[j] < a[m]) m = j; }
+      if (m !== i) { [a[i], a[m]] = [a[m], a[i]]; yield { t: 'swap', i, j: m }; }
+      yield { t: 'done', i };
+    }
+  }
+  function* insertion(a) {
+    for (let i = 1; i < a.length; i++) {
+      let j = i;
+      while (j > 0) {
+        yield { t: 'cmp', i: j - 1, j };
+        if (a[j - 1] > a[j]) { [a[j - 1], a[j]] = [a[j], a[j - 1]]; yield { t: 'swap', i: j - 1, j }; j--; } else break;
+      }
+    }
+    for (let i = 0; i < a.length; i++) yield { t: 'done', i };
+  }
+  function* merge(a) {
+    function* rec(lo, hi) {
+      if (hi - lo < 1) return;
+      const mid = (lo + hi) >> 1;
+      yield* rec(lo, mid); yield* rec(mid + 1, hi);
+      const L = a.slice(lo, mid + 1), R = a.slice(mid + 1, hi + 1);
+      let i = 0, j = 0, k = lo;
+      while (i < L.length && j < R.length) {
+        yield { t: 'cmp', i: lo + i, j: mid + 1 + j };
+        a[k] = L[i] <= R[j] ? L[i++] : R[j++]; yield { t: 'set', i: k, v: a[k] }; k++;
+      }
+      while (i < L.length) { a[k] = L[i++]; yield { t: 'set', i: k, v: a[k] }; k++; }
+      while (j < R.length) { a[k] = R[j++]; yield { t: 'set', i: k, v: a[k] }; k++; }
+    }
+    yield* rec(0, a.length - 1);
+    for (let i = 0; i < a.length; i++) yield { t: 'done', i };
+  }
+  function* quick(a) {
+    function* rec(lo, hi) {
+      if (lo > hi) return;
+      if (lo === hi) { yield { t: 'done', i: lo }; return; }
+      const p = a[hi]; let s = lo;
+      for (let i = lo; i < hi; i++) {
+        yield { t: 'cmp', i, j: hi };
+        if (a[i] < p) { if (i !== s) { [a[i], a[s]] = [a[s], a[i]]; yield { t: 'swap', i, j: s }; } s++; }
+      }
+      if (s !== hi) { [a[s], a[hi]] = [a[hi], a[s]]; yield { t: 'swap', i: s, j: hi }; }
+      yield { t: 'done', i: s };
+      yield* rec(lo, s - 1); yield* rec(s + 1, hi);
+    }
+    yield* rec(0, a.length - 1);
+  }
+  function* heap(a) {
+    const n = a.length;
+    function* sift(i, size) {
+      for (;;) {
+        let m = i; const l = 2 * i + 1, r = l + 1;
+        if (l < size) { yield { t: 'cmp', i: m, j: l }; if (a[l] > a[m]) m = l; }
+        if (r < size) { yield { t: 'cmp', i: m, j: r }; if (a[r] > a[m]) m = r; }
+        if (m === i) return;
+        [a[i], a[m]] = [a[m], a[i]]; yield { t: 'swap', i, j: m }; i = m;
+      }
+    }
+    for (let i = (n >> 1) - 1; i >= 0; i--) yield* sift(i, n);
+    for (let e = n - 1; e > 0; e--) {
+      [a[0], a[e]] = [a[e], a[0]]; yield { t: 'swap', i: 0, j: e };
+      yield { t: 'done', i: e }; yield* sift(0, e);
+    }
+    if (n) yield { t: 'done', i: 0 };
+  }
+  const ALGORITHMS = {
+    bubble: { name: 'Bubble Sort', run: bubble, best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)',
+      desc: 'Repeatedly swaps neighbouring items that are out of order, so the largest value bubbles to the end.' },
+    selection: { name: 'Selection Sort', run: selection, best: 'O(n²)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)',
+      desc: 'Finds the smallest remaining item and places it at the front of the unsorted part.' },
+    insertion: { name: 'Insertion Sort', run: insertion, best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)',
+      desc: 'Takes each item and slides it left into its place among the items already sorted.' },
+    merge: { name: 'Merge Sort', run: merge, best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)',
+      desc: 'Splits the array in halves, sorts each half, then merges them back in order.' },
+    quick: { name: 'Quick Sort', run: quick, best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n²)', space: 'O(log n)',
+      desc: 'Picks a pivot, moves smaller items before it and larger after, then sorts each side.' },
+    heap: { name: 'Heap Sort', run: heap, best: 'O(n log n)', avg: 'O(n log n)', worst: 'O(n log n)', space: 'O(1)',
+      desc: 'Builds a max-heap, then repeatedly moves the largest item to the end.' }
+  };
+  root.ALGORITHMS = ALGORITHMS;
+  if (typeof module !== 'undefined') module.exports = ALGORITHMS;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const DELAYS = [400, 150, 50, 15, 3]; // ms per step for speed 1..5
+  let current = 'bubble', original = [], data = [], bars = [], running = false, token = 0;
+
+  const algoList = $('algoList');
+  Object.entries(ALGORITHMS).forEach(([key, a]) => {
+    const b = document.createElement('button');
+    b.textContent = a.name; b.dataset.key = key; b.setAttribute('role', 'radio');
+    b.onclick = () => select(key);
+    algoList.appendChild(b);
+  });
+
+  function select(key) {
+    if (running) return;
+    current = key;
+    algoList.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', b.dataset.key === key));
+    const a = ALGORITHMS[key];
+    $('infoName').textContent = a.name;
+    $('tBest').textContent = a.best; $('tAvg').textContent = a.avg;
+    $('tWorst').textContent = a.worst; $('tSpace').textContent = a.space;
+    $('infoDesc').textContent = a.desc;
+    restore();
+  }
+  function render() {
+    const box = $('bars'); box.innerHTML = ''; bars = [];
+    data.forEach((v) => {
+      const d = document.createElement('div');
+      d.className = 'bar'; d.style.height = v + '%'; box.appendChild(d); bars.push(d);
+    });
+  }
+  function counters(c, s) { $('cmp').textContent = c; $('swp').textContent = s; }
+  function status(t) { $('status').textContent = t; }
+  function lock(on) {
+    running = on;
+    ['start', 'reset', 'shuffle', 'size'].forEach((id) => ($(id).disabled = on));
+    algoList.querySelectorAll('button').forEach((b) => (b.disabled = on));
+  }
+  function newArray() {
+    const n = +$('size').value;
+    original = Array.from({ length: n }, () => 5 + Math.floor(Math.random() * 95));
+    restore();
+  }
+  function restore() { data = original.slice(); counters(0, 0); status('Ready'); render(); }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const clear = (idx) => idx.forEach((i) => bars[i] && bars[i].classList.remove('compare', 'swap'));
+
+  async function start() {
+    if (running) return;
+    restore(); lock(true); status('Sorting…');
+    let c = 0, s = 0;
+    for (const e of ALGORITHMS[current].run(data)) {
+      if (e.t === 'cmp') { c++; bars[e.i].classList.add('compare'); bars[e.j].classList.add('compare'); }
+      else if (e.t === 'swap') {
+        s++; [bars[e.i].style.height, bars[e.j].style.height] = [data[e.i] + '%', data[e.j] + '%'];
+        bars[e.i].classList.add('swap'); bars[e.j].classList.add('swap');
+      } else if (e.t === 'set') { s++; bars[e.i].style.height = e.v + '%'; bars[e.i].classList.add('swap'); }
+      else if (e.t === 'done') bars[e.i].classList.add('sorted');
+      counters(c, s);
+      if (e.t !== 'done') { await sleep(DELAYS[$('speed').value - 1]); clear([e.i, e.j]); }
+    }
+    bars.forEach((b) => { b.classList.remove('compare', 'swap'); b.classList.add('sorted'); });
+    status('Sorted'); lock(false);
+  }
+
+  $('size').oninput = () => { $('sizeOut').textContent = $('size').value; newArray(); };
+  $('speed').oninput = () => ($('speedOut').textContent = $('speed').value);
+  $('shuffle').onclick = newArray;
+  $('reset').onclick = restore;
+  $('start').onclick = start;
+  select('bubble'); newArray();
+})();
+
+</script>
 </body>
 </html>
