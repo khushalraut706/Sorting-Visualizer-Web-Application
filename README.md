@@ -22,7 +22,7 @@ The Sorting Visualizer project is a web application developed with HTML, CSS, an
 
 ## Project Screenshot:
 
-![Sorting Visualizer](screenshot.png)
+![Sorting Visualizer](snapshot.png)
 
 
 ## Live Demo:
